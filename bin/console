@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use PhpProPractice\App\Calculator\Actions as CalculatorActions;
+use PhpProPractice\App\Calculator\Calculator;
+
+try {
+    $args = $_SERVER['argv'];
+    array_shift($args);
+
+    if (count($args) < 3) {
+        throw new InvalidArgumentException('The calculator expected three arguments.');
+    }
+
+    if (!is_numeric($args[0]) || !is_numeric($args[2])) {
+        throw new InvalidArgumentException('The first and the third arguments must be numeric.');
+    }
+
+    $calc = (new Calculator())
+        ->registerAction(new CalculatorActions\Add())
+        ->registerAction(new CalculatorActions\Sub())
+        ->registerAction(new CalculatorActions\Mult())
+        ->registerAction(new CalculatorActions\Div())
+        ->registerAction(new CalculatorActions\Pow())
+        ->registerAction(new CalculatorActions\Root());
+
+    echo $calc->calculate(floatval($args[0]), floatval($args[2]), $args[1]) . PHP_EOL;
+
+} catch (\Throwable $e) {
+    echo $e->getMessage() . PHP_EOL;
+}
