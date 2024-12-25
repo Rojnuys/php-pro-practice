@@ -2,8 +2,10 @@
     "name": "php-pro-practice/app",
     "autoload": {
         "psr-4": {
-            "PhpProPractice\\App\\": "src/"
+            "App\\": "src/"
         }
     },
-    "require": {}
+    "require": {
+      "ext-curl": "*"
+    }
 }
