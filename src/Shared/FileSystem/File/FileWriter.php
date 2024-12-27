@@ -9,17 +9,33 @@ use App\Shared\FileSystem\File\Interface\IFileWriter;
 
 readonly class FileWriter implements IFileWriter
 {
-    public function __construct(public string $path, public bool $isAppend = false)
+    public function __construct(public string $path)
     {
     }
 
     /**
      * @throws WriteFileException
      */
-    public function write(string $data): void
+    public function rewrite(string $data): void
+    {
+        $this->write($data);
+    }
+
+    /**
+     * @throws WriteFileException
+     */
+    public function append(string $data): void
+    {
+        $this->write($data, true);
+    }
+
+    /**
+     * @throws WriteFileException
+     */
+    protected function write(string $data, bool $isAppend = false): void
     {
         try {
-            $file = fopen($this->path, $this->isAppend ? 'a' : 'w');
+            $file = fopen($this->path, $isAppend ? 'a' : 'w');
             fwrite($file, $data);
         } catch (\Throwable $e) {
             throw new WriteFileException($e->getMessage());

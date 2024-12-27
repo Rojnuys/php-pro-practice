@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 use App\Shared\FileSystem\File\FileReader;
 use App\Shared\FileSystem\File\FileWriter;
-use App\Shortener\Repositories\FileUrlCodePairRepository;
-use App\Shortener\Services\CodeGenerator;
-use App\Shortener\Shortener;
-use App\Shortener\Validators\UrlValidator;
+use App\UrlShortener\Application\Services\Shortener;
+use App\UrlShortener\Domain\Services\CodeGenerator;
+use App\UrlShortener\Infrastructure\File\Repositories\UrlCodePairRepository;
 
-$urlCodePairFile = __DIR__ . '/../storage/url-code-pair.txt';
+$urlCodePairFile = __DIR__ . '/../storage/url-code-pair2.txt';
 
 $shortener = new Shortener(
-    new FileUrlCodePairRepository(
+    new UrlCodePairRepository(
         new FileReader($urlCodePairFile),
         new FileWriter($urlCodePairFile),
     ),
-    new UrlValidator(),
     new CodeGenerator(),
 );
 

@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Shortener;
+namespace App\UrlShortener\Application\Services;
 
-use App\Shortener\DTO\UrlCodePairCreateDTO;
-use App\Shortener\Exceptions\CodeAlreadyExistException;
-use App\Shortener\Exceptions\UrlCodePairDoesNotExistException;
-use App\Shortener\Interfaces\ICodeGenerator;
-use App\Shortener\Interfaces\IUrlCodePairRepository;
-use App\Shortener\Interfaces\IUrlDecoder;
-use App\Shortener\Interfaces\IUrlEncoder;
-use App\Shortener\Interfaces\IUrlValidator;
+use App\UrlShortener\Application\Interfaces\IUrlDecoder;
+use App\UrlShortener\Application\Interfaces\IUrlEncoder;
+use App\UrlShortener\Domain\DTO\UrlCodePairCreateDTO;
+use App\UrlShortener\Domain\Exceptions\CodeAlreadyExistException;
+use App\UrlShortener\Domain\Exceptions\UrlCodePairDoesNotExistException;
+use App\UrlShortener\Domain\Interfaces\ICodeGenerator;
+use App\UrlShortener\Domain\Interfaces\IUrlCodePairRepository;
+use App\UrlShortener\Domain\VO\Code;
+use App\UrlShortener\Domain\VO\Url;
 
 class Shortener implements IUrlEncoder, IUrlDecoder
 {
@@ -17,9 +18,8 @@ class Shortener implements IUrlEncoder, IUrlDecoder
 
     public function __construct(
         protected IUrlCodePairRepository $repository,
-        protected IUrlValidator $urlValidator,
-        protected ICodeGenerator $codeGenerator,
-        protected int $codeLength = 6
+        protected ICodeGenerator         $codeGenerator,
+        protected int                    $codeLength = 6
     )
     {
         if ($this->codeLength < 1 || $this->codeLength > 100) {
@@ -33,7 +33,7 @@ class Shortener implements IUrlEncoder, IUrlDecoder
     public function decode(string $code): string
     {
         try {
-            $urlCodePair = $this->repository->getByCode($code);
+            $urlCodePair = $this->repository->getByCode(Code::fromValue($code));
             $urlCodePair->increaseCount();
             $this->repository->update($urlCodePair);
             return $urlCodePair->getUrl();
@@ -47,12 +47,8 @@ class Shortener implements IUrlEncoder, IUrlDecoder
      */
     public function encode(string $url): string
     {
-        $this->urlValidator->checkFormat($url);
-        $this->urlValidator->checkAvailability($url);
-        $url = rtrim($url, "/");
-
         try {
-            return $this->repository->getByUrl($url)->getCode();
+            return $this->repository->getByUrl(Url::fromValue($url))->getCode();
         } catch (UrlCodePairDoesNotExistException) {
             return $this->createNewUrlCodePair($url);
         }
@@ -66,11 +62,12 @@ class Shortener implements IUrlEncoder, IUrlDecoder
         $attempts = 0;
 
         while ($attempts < static::NUMBER_OF_ATTEMPTS_TO_CREATE_CODE) {
-            $code = $this->codeGenerator->generate($this->codeLength);
+            $code = Code::fromValue($this->codeGenerator->generate($this->codeLength));
+            $url = Url::fromValue($url);
 
             try {
                 $this->repository->create(new UrlCodePairCreateDTO($url, $code));
-                return $code;
+                return $code->code;
             } catch (CodeAlreadyExistException) {
                 $attempts++;
             }

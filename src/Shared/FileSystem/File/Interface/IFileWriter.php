@@ -11,5 +11,10 @@ interface IFileWriter
     /**
      * @throws WriteFileException
      */
-    public function write(string $data): void;
+    public function rewrite(string $data): void;
+
+    /**
+     * @throws WriteFileException
+     */
+    public function append(string $data): void;
 }
