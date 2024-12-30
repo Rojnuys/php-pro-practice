@@ -6,5 +6,5 @@ namespace App\Shortener\Interfaces;
 
 interface ICodeGenerator
 {
-    public function generate(?int $length = null): string;
+    public function generate(int $length): string;
 }

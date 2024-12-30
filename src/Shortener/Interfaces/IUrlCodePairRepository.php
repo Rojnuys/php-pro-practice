@@ -24,7 +24,7 @@ interface IUrlCodePairRepository
     /**
      * @throws CodeAlreadyExistException
      */
-    public function create(UrlCodePairCreateDTO $dto): void;
+    public function create(UrlCodePairCreateDTO $dto): UrlCodePair;
 
     /**
      * @throws UrlCodePairDoesNotExistException

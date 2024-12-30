@@ -3,28 +3,29 @@
 namespace App\Shortener;
 
 use App\Shortener\DTO\UrlCodePairCreateDTO;
+use App\Shortener\Entities\UrlCodePair;
 use App\Shortener\Exceptions\CodeAlreadyExistException;
 use App\Shortener\Exceptions\UrlCodePairDoesNotExistException;
 use App\Shortener\Interfaces\ICodeGenerator;
 use App\Shortener\Interfaces\IUrlCodePairRepository;
 use App\Shortener\Interfaces\IUrlDecoder;
 use App\Shortener\Interfaces\IUrlEncoder;
+use App\Shortener\Interfaces\IUrlParser;
 use App\Shortener\Interfaces\IUrlValidator;
 
 class Shortener implements IUrlEncoder, IUrlDecoder
 {
     protected const int NUMBER_OF_ATTEMPTS_TO_CREATE_CODE = 5;
+    protected const int DEFAULT_CODE_LENGTH = 6;
 
     public function __construct(
         protected IUrlCodePairRepository $repository,
         protected IUrlValidator $urlValidator,
+        protected IUrlParser $urlParser,
         protected ICodeGenerator $codeGenerator,
-        protected int $codeLength = 6
+        protected int $codeLength = self::DEFAULT_CODE_LENGTH
     )
     {
-        if ($this->codeLength < 1 || $this->codeLength > 100) {
-            throw new \InvalidArgumentException('Code length must be between 1 and 100');
-        }
     }
 
     /**
@@ -49,33 +50,26 @@ class Shortener implements IUrlEncoder, IUrlDecoder
     {
         $this->urlValidator->checkFormat($url);
         $this->urlValidator->checkAvailability($url);
-        $url = rtrim($url, "/");
+        $url = $this->urlParser->parse($url);
 
         try {
             return $this->repository->getByUrl($url)->getCode();
         } catch (UrlCodePairDoesNotExistException) {
-            return $this->createNewUrlCodePair($url);
+            return $this->createUrlCodePair($url)->getCode();
         }
     }
 
-    /**
-     * @throws \InvalidArgumentException
-     */
-    protected function createNewUrlCodePair(string $url): string
+    protected function createUrlCodePair(string $url, int $attempt = 1): UrlCodePair
     {
-        $attempts = 0;
-
-        while ($attempts < static::NUMBER_OF_ATTEMPTS_TO_CREATE_CODE) {
-            $code = $this->codeGenerator->generate($this->codeLength);
-
-            try {
-                $this->repository->create(new UrlCodePairCreateDTO($url, $code));
-                return $code;
-            } catch (CodeAlreadyExistException) {
-                $attempts++;
-            }
+        if ($attempt > static::NUMBER_OF_ATTEMPTS_TO_CREATE_CODE) {
+            throw new \InvalidArgumentException('The service cannot create a code. Please try again.');
         }
 
-        throw new \InvalidArgumentException('The service cannot create a code. Please try again.');
+        try {
+            $code = $this->codeGenerator->generate($this->codeLength);
+            return $this->repository->create(UrlCodePairCreateDTO::fromArray(['url' => $url, 'code' => $code]));
+        } catch (CodeAlreadyExistException) {
+            return $this->createUrlCodePair($url, $attempt + 1);
+        }
     }
 }

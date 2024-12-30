@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Shortener\Validators;
+namespace App\Shortener\Services\Validators;
 
 use App\Shortener\Enums\UrlAvailableHttpStatus;
 use App\Shortener\Interfaces\IUrlValidator;

@@ -6,8 +6,9 @@ use App\Shared\FileSystem\File\FileReader;
 use App\Shared\FileSystem\File\FileWriter;
 use App\Shortener\Repositories\FileUrlCodePairRepository;
 use App\Shortener\Services\CodeGenerator;
+use App\Shortener\Services\Parsers\UrlParser;
+use App\Shortener\Services\Validators\UrlValidator;
 use App\Shortener\Shortener;
-use App\Shortener\Validators\UrlValidator;
 
 $urlCodePairFile = __DIR__ . '/../storage/url-code-pair.txt';
 
@@ -17,6 +18,7 @@ $shortener = new Shortener(
         new FileWriter($urlCodePairFile),
     ),
     new UrlValidator(),
+    new UrlParser(),
     new CodeGenerator(),
 );
 

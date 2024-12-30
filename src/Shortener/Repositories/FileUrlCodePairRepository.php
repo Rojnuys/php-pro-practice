@@ -48,17 +48,16 @@ class FileUrlCodePairRepository implements IUrlCodePairRepository
      * @throws ReadFileException
      * @throws WriteFileException
      */
-    public function create(UrlCodePairCreateDTO $dto): void
+    public function create(UrlCodePairCreateDTO $dto): UrlCodePair
     {
         if ($this->isCodeAlreadyExists($dto->code)) {
             throw new CodeAlreadyExistException("The UrlCodePair with code {$dto->code} already exists.");
         }
 
-        $this->fileWriter->append(
-            $this->formatUrlCodePair(
-                new UrlCodePair(uniqid('ucp_'), $dto->url, $dto->code)
-            )
-        );
+        $newUrlCodePair = new UrlCodePair(uniqid('ucp_'), $dto->url, $dto->code);
+        $this->fileWriter->append($this->formatUrlCodePair($newUrlCodePair));
+
+        return $newUrlCodePair;
     }
 
     /**

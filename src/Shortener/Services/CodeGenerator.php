@@ -9,11 +9,14 @@ use App\Shortener\Interfaces\ICodeGenerator;
 class CodeGenerator implements ICodeGenerator
 {
     protected const string AVAILABLE_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz1234567890';
-    protected const int CODE_LENGTH = 6;
 
-    public function generate(?int $length = null): string
+    public function generate(int $length): string
     {
+        if ($length <= 0) {
+            throw new \InvalidArgumentException('Length must be greater than 0');
+        }
+
         $characters = static::AVAILABLE_CHARACTERS . mb_strtoupper(static::AVAILABLE_CHARACTERS);
-        return substr(str_shuffle($characters), 0, $length ?? static::CODE_LENGTH);
+        return substr(str_shuffle($characters), 0, $length);
     }
 }
